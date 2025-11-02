@@ -37,13 +37,13 @@ def user_input():
   while True:
     print("What is your game API?")
     print("[1] - Vulkan")
-    print("[2] - OpenGL")
-    print("[3] - d3d9")
-    print("[4] - d3d10")
+    print("[2] - d3d9")
+    print("[3] - d3d10")
+    # print("[4] - OpenGL") Can't get openGL to work
 
     game_api = abs(int(input("Choice: ")))
 
-    if game_api <= 4:
+    if game_api <= 3:
       break
 
   # Match "switch case"
@@ -52,20 +52,14 @@ def user_input():
       new_dll = ready_dll(local_source, 'dxgi.dll',)
       correct_dll = find_reshade('./reshade', 'dxgi.dll')
     case 2:
-      new_dll = ready_dll(local_source, 'opengl.dll')
-      correct_dll = find_reshade('./reshade', 'opengl.dll')
-    case 3:
       new_dll = ready_dll(local_source, 'd3d9.dll',)
       correct_dll = find_reshade('./reshade', 'd3d9.dll')
     case 4:
       new_dll = ready_dll(local_source, 'd3d10.dll',)
       correct_dll = find_reshade('./reshade', 'd3d10.dll')
 
-  # Old if statement
-  # if game_api == 1:
-  #   new_dll = ready_dll(local_source, 'dxgi.dll',)
-  #   correct_dll = find_reshade('./reshade', 'dxgi.dll')
-  # else:
+  # Can't test openGL on Linux
+  # case 4:
   #   new_dll = ready_dll(local_source, 'opengl.dll')
   #   correct_dll = find_reshade('./reshade', 'opengl.dll')
 
@@ -80,16 +74,13 @@ def ready_dll(local, new_name):
 
 def copy_reshade_to_games_folder(correct_dll, game_source, new_dll):
   shutil.copyfile(correct_dll, f'{game_source}/{new_dll}')
-
-  # if len(os.listdir('./reshade/effects')) == 0:
-  #   os.system("git clone https://github.com/crosire/reshade-shaders.git ./reshade/effects")
-  # else:    
-  #   print("We already have shaders downloaded.")
-
   shutil.copytree('./reshade/effects/Shaders', f'{game_source}/Shaders', dirs_exist_ok=True)
   shutil.copytree('./reshade/effects/Textures', f'{game_source}/Textures', dirs_exist_ok=True)
 
 def git_clone_effects():
+  if not os.path.isdir('./reshade/effects'):
+    os.system('mkdir ./reshade/effects')
+
   if len(os.listdir('./reshade/effects')) == 0:
     os.system("git clone https://github.com/crosire/reshade-shaders.git ./reshade/effects")
   else:    
