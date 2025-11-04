@@ -70,12 +70,6 @@ class MainWindow(QMainWindow):
     self.line_edit.setPlaceholderText("Your game root directory")
     self.browse_button = QPushButton("Browse")
 
-    # Browse stuff OLD
-    #line_edit = QLineEdit()
-    #line_edit.setPlaceholderText("You game directory")
-    #browse_button = QPushButton("Browse")
-    #file_dialog = QFileDialog()
-
     # Game architecture
     label4 = self.labelFactory.createLabel("sub_title", "Select the game architecture")
     label5 = self.labelFactory.createLabel("body", "As this is still in <b>early development state</b>, you need to know if you game is 32 or 64 bit. <i>Later on I will check it on PCGW. For now you will need to select the matter</i>. If you don't know nothing about, check on <a href='https://www.pcgamingwiki.com/wiki/Home'>PCGamingWiki</a>.")
@@ -154,10 +148,18 @@ class MainWindow(QMainWindow):
 
       api = None
 
-      match api:
-        case self.vulkan_radio.isChecked(): api = "Vulkan"
-        case self.d3d9_radio.isChecked(): api = "d3d9"
-        case self.d3d10_radio.isChecked(): api = "d3d10"
+      # For some reason python does not know how to follow with a match here...
+      # match api:
+      #   case self.vulkan_radio.isChecked(): api = "Vulkan"
+      #   case self.d3d9_radio.isChecked(): api = "d3d9"
+      #   case self.d3d10_radio.isChecked(): api = "d3d10"
+
+      if self.vulkan_radio.isChecked():
+        api = "Vulkan"
+      elif self.d3d9_radio.isChecked():
+        api = "d3d9"
+      elif self.d3d10_radio.isChecked():
+        api = "d3d10"
 
       self.install_button.setEnabled(False) # Prevents double click that can be fuck stuff up
       self.update_status("Starting Installation...")
