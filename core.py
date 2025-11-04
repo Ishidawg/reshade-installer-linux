@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Slot
 from zipfile import ZipFile
 from pathlib import Path
 import shutil
@@ -42,10 +42,26 @@ class ReshadeInstaller:
 class ReshadeInstallerBuilder(QObject):
 
   installation_progress_updated = Signal(str)
+  finished = Signal()
 
   def __init__(self):
     super().__init__()
     self.reshade = ReshadeInstaller()  
+
+  @Slot()
+  def run_initial_setup(self):
+    try:
+      search_path = '/home'
+      pattern =     'ReShade_Setup*.exe'
+
+      self.installation_progress_updated.emit(f"Searching for the Reshade.exe into {search_path}")
+      self.find_and_unzip(search_path, pattern)
+      self.clone_shaders()
+      self.installation_progress_updated.emit("Ready to install!")
+    except Exception as error:
+      self.installation_progress_updated.emit(f"ERROR: setup failed because of {error}")
+    finally:
+      self.finished.emit()
 
   # Return an complete installation and resets the builder
   def get_reshade_product(self):
@@ -125,7 +141,7 @@ class ReshadeInstallerBuilder(QObject):
     try: 
       matches = list(start.rglob(pattern))
     except PermissionError:
-      raise PermissionError("ERROR: Not allowed due to permission stuff")
+      print("ERROR: Not allowed due to permission stuff")
       return None
 
     if not matches:
@@ -135,7 +151,7 @@ class ReshadeInstallerBuilder(QObject):
 
   def _unzip_reshade(self, source):
     if not os.path.isdir('./reshade'): # Check if directory exists
-      self.installation_progress_updated.emit("Extracting Reshade executable...")
+      # self.installation_progress_updated.emit("Extracting Reshade executable...")
       with ZipFile(source, 'r') as zip_object:
         zip_object.extractall("./reshade")
 
@@ -156,40 +172,39 @@ class ReshadeInstallerBuilder(QObject):
     else:    
       print("We already have shaders downloaded.")
 
-if __name__ == "__main__":
-  app = QApplication(sys.argv)
+# Keep to debuggin...
+# if __name__ == "__main__":
+#   app = QApplication(sys.argv)
 
-  builder = ReshadeInstallerBuilder()
+#   builder = ReshadeInstallerBuilder()
 
-  def debug_message(message):
-    print(f"SIGNAL: {message}")
+#   def debug_message(message):
+#     print(f"SIGNAL: {message}")
 
+#   builder.installation_progress_updated.connect(debug_message)
 
-  builder.installation_progress_updated.connect(debug_message)
+#   RESHADE_SEARCH_PATH = '/home'
+#   RESHADE_PATTERN = 'ReShade_Setup*.exe'
 
-  RESHADE_SEARCH_PATH = '/home'
-  RESHADE_PATTERN = 'ReShade_Setup*.exe'
+#   user_game_dir = str(input("Qual o diretório do seu jogo: ")).strip()
+#   user_game_bits = "64bit"
+#   user_game_api = "Vulkan"
 
-  user_game_dir = str(input("Qual o diretório do seu jogo: ")).strip()
-  user_game_bits = "64bit"
-  user_game_api = "Vulkan"
-
-  try:
-      builder.find_and_unzip(RESHADE_SEARCH_PATH, RESHADE_PATTERN)
-      builder.clone_shaders()
+#   try:
+#       builder.find_and_unzip(RESHADE_SEARCH_PATH, RESHADE_PATTERN)
+#       builder.clone_shaders()
       
-      builder.set_game_architecture(user_game_bits)
-      builder.set_game_api(user_game_api)
-      builder.set_game_directory(user_game_dir)
+#       builder.set_game_architecture(user_game_bits)
+#       builder.set_game_api(user_game_api)
+#       builder.set_game_directory(user_game_dir)
   
       
-      installer = builder.get_reshade_product()
-      print(installer) 
+#       installer = builder.get_reshade_product()
+#       print(installer) 
       
-      for message in installer.install():
-        debug_message(message)
-
-  except Exception as e:
-      print(f"\n--- ERROR ---", file=sys.stderr)
-      print(f"{e}", file=sys.stderr)
-      sys.exit(1)
+#       for message in installer.install():
+#         debug_message(message)
+#   except Exception as e:
+#       print(f"\n--- ERROR ---", file=sys.stderr)
+#       print(f"{e}", file=sys.stderr)
+#       sys.exit(1)

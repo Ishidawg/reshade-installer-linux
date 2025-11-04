@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QHBoxLayout, QVBoxLayout, QFileDialog, QLineEdit, QPushButton, QRadioButton
 from core import ReshadeInstallerBuilder
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread
 import sys
 
 class TitleLabel(QLabel):
@@ -119,13 +119,26 @@ class MainWindow(QMainWindow):
     # Create a 'core' instance
     self.builder = ReshadeInstallerBuilder()
 
+    # Connects the installation progress to the update_status label
     self.builder.installation_progress_updated.connect(self.update_status)
+
+    # Creates a thread and moves the builder to it
+    self.installation_thread = QThread()
+    self.builder.moveToThread(self.installation_thread)
+
+    # Connects the signal to the thread
+    self.installation_thread.started.connect(self.builder.run_initial_setup)
+
+    # Makes thread stop when installetion completes ALSO clean memory where the thread was
+    self.builder.finished.connect(self.installation_thread.quit)
+    self.builder.finished.connect(self.builder.deleteLater) # self.builder DELETES THE builder, otherwise the application will close
+    self.installation_thread.finished.connect(self.installation_thread.deleteLater)
 
     # Connect UI to observable slots
     self.install_button.clicked.connect(self.on_install_clicked)
     self.browse_button.clicked.connect(self.on_browse_clicked)
 
-    self.run_initial_setup()
+    self.installation_thread.start()
 
   def update_status(self, message: str):
     self.status_label.setText(message)
@@ -178,15 +191,6 @@ class MainWindow(QMainWindow):
       self.update_status(f"ERROR: {error}")
     finally:
       self.install_button.setEnabled(True) # Enables the button when the installation ends
-
-  def run_initial_setup(self):
-    try:
-      self.update_status("Searching for reshade.exe")
-      self.builder.find_and_unzip('/home', 'ReShade_Setup*.exe')
-      self.builder.clone_shaders()
-      self.update_status("Ready to install!")
-    except Exception as error:
-      self.update_status(f"ERROR: setup failed: {error}")
 
 if __name__ == "__main__":
   app = QApplication(sys.argv)
