@@ -15,7 +15,7 @@ _Why n-..._ I never built any GUI with **Qt** or **GTK**, so as I use *GNOME* on
 The project of course is not currently done, look at monstrosity of GUI... Also as my goal is to do reshade installation easier on linux, it would be fabulous if I reduce user steps, like selecting the application architecture and even cloning the repo. Why not do a flatpak of it also?
 
  - [x] Basic functionalities
- - [ ] Redo GUI
+ - [x] Redo GUI
  - [ ] Automatically verify the application architecture: it can be done by looking into some of the first bytes of the game executable binary, they are located  on the COFF Header.
  - [ ] Flatpak
  - [ ] appImage

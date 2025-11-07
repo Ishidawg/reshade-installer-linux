@@ -1,32 +1,37 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QHBoxLayout, QVBoxLayout, QFileDialog, QLineEdit, QPushButton, QRadioButton
+from PySide6.QtGui import QFont, QPixmap
 from core import ReshadeInstallerBuilder
 from PySide6.QtCore import Qt, QThread
 import sys
 
 class TitleLabel(QLabel):
-  def __init__(self, text):
-    super().__init__(f"<font size=6>{text}</font>")
+  def __init__(self, font, text):
+    super().__init__(f"{text}")
     self.setAlignment(Qt.AlignCenter)
-    self.setContentsMargins(0, 20, 0, 0)
+    self.setContentsMargins(0, 30, 0, 0)
+    self.setFont(font)
 
 class SubTitleLabel(QLabel):
-  def __init__(self, text):
-    super().__init__(f"<font size=5>{text}</font>")
+  def __init__(self, font, text):
+    super().__init__(f"{text}")
     self.setAlignment(Qt.AlignLeft)
-    self.setContentsMargins(0, 20, 0, -18)
+    self.setFont(font)
+    self.setContentsMargins(34, 0, 0, 0)
+    self.setFixedHeight(28)
 
 class BodyLabel(QLabel):
-  def __init__(self, text):
+  def __init__(self, font, text):
     super().__init__(f"{text}")
-    self.setAlignment(Qt.AlignJustify)
+    self.setAlignment(Qt.AlignCenter)
     self.setWordWrap(True)
+    self.setFont(font)
 
 class LabelFactory():
-  def createLabel(self, label_type, text):
+  def createLabel(self, label_type, font, text):
     match label_type:
-      case "title":       return TitleLabel(text)
-      case "sub_title":   return SubTitleLabel(text)
-      case "body":        return BodyLabel(text)
+      case "title":       return TitleLabel(font, text)
+      case "sub_title":   return SubTitleLabel(font, text)
+      case "body":        return BodyLabel(font, text)
 
     return print("You did not use a valid label_type")
 
@@ -36,78 +41,111 @@ class MainWindow(QMainWindow):
   def __init__(self):
     super().__init__()
 
-    self.labelFactory = LabelFactory()
-
     WINDOW_WIDTH = 620
+    WINDOW_HEIGHT = 760
+
+    # Fonts style (where it used - what font is - font wheight)
+    TITLE_OVERPASS_FONT = QFont("Overpass", 24, QFont.Bold)
+    TITLE_OVERPASS_FONT_200 = QFont("Overpass", 13, QFont.ExtraLight)
+    SUBTITLE_OVERPASS_FONT_400 = QFont("Overpass", 18, QFont.Normal)
+    GLOBAL_OVERPASS_FONT = QFont("Overpass", 11)
+
+    self.labelFactory = LabelFactory()
 
     self.setWindowTitle("Reshade Installer")
     self.setFixedWidth(WINDOW_WIDTH)
+    self.setFixedHeight(WINDOW_HEIGHT)
+    self.setFont(GLOBAL_OVERPASS_FONT)
 
     # Main container
     container = QWidget()
+    container.setContentsMargins(40, 0, 40, 0) # Set vertical margins
     self.setCentralWidget(container)
     main_layout = QVBoxLayout(container)
 
     # Inner Containers
     browse_container = QWidget()
+    browse_container.setContentsMargins(0, 0, 0, 40)
     browse_layout = QHBoxLayout(browse_container)
 
     architecture_container = QWidget()
+    architecture_container.setContentsMargins(0, 0, 0, 40)
     architecture_layout = QHBoxLayout(architecture_container)
-    architecture_layout.setAlignment(Qt.AlignCenter)
+    architecture_layout.setAlignment(Qt.AlignLeft)
 
     rendering_container = QWidget()
+    rendering_container.setContentsMargins(0, 0, 0, 40)
     rendering_layout = QHBoxLayout(rendering_container)
-    rendering_layout.setAlignment(Qt.AlignCenter)
+    rendering_layout.setAlignment(Qt.AlignLeft)
 
     # Main label stuff
-    label1 = self.labelFactory.createLabel("title", "Reshade installer for proton games!")
-    label2 = self.labelFactory.createLabel("body", "This is a <i>university project</i> that kinda works! The porpuse is to make reshade installation a bit easier. You just need to select the <b>root directory</b> <i>(where the .exe is)</i>, the application architecture and the rendering API. <font color=#ee2c2c><b>This is only intended for proton games.</b></font>")
-    label3 = self.labelFactory.createLabel("sub_title", "Select the game directory")
+    ## Title
+    label_title = self.labelFactory.createLabel("title", TITLE_OVERPASS_FONT, "Reshade installer")
+    label_title.setFixedHeight(60)
+    label_title_bottom = self.labelFactory.createLabel("body", TITLE_OVERPASS_FONT_200, "intended just for pronton games")
+    label_title_bottom.setFixedHeight(28)
+    
+    ## Project description
+    label_description = self.labelFactory.createLabel("body", TITLE_OVERPASS_FONT_200, "This is a unofficial reshade installer for linux, intented to be used with\nproton applications, but it may also work with wine games.")
+    label_description.setFixedHeight(120)
 
-    # Brose stuff NEW!!
+    ## Directory step
+    label_directory_step = self.labelFactory.createLabel("sub_title", SUBTITLE_OVERPASS_FONT_400, "Select games directory")
     self.line_edit = QLineEdit()
-    self.line_edit.setPlaceholderText("Your game root directory")
     self.browse_button = QPushButton("Browse")
 
-    # Game architecture
-    label4 = self.labelFactory.createLabel("sub_title", "Select the game architecture")
-    label5 = self.labelFactory.createLabel("body", "As this is still in <b>early development state</b>, you need to know if you game is 32 or 64 bit. <i>Later on I will check it on PCGW. For now you will need to select the matter</i>. If you don't know nothing about, check on <a href='https://www.pcgamingwiki.com/wiki/Home'>PCGamingWiki</a>.")
+    folder_icon_draw = QLabel(self)
+    folder_icon = QPixmap("./images/step_icons/folder_icon.png")
+    folder_icon_draw.setPixmap(folder_icon)
+    folder_icon_draw.setGeometry(56, 230, folder_icon_draw.width(), folder_icon_draw.height())
+
+    # Game architecture step
+    label_arch_step = self.labelFactory.createLabel("sub_title", SUBTITLE_OVERPASS_FONT_400, "Select games architecture")
     self.bit_32_radio = QRadioButton("32bit")
     self.bit_64_radio = QRadioButton("64bit")
     self.bit_64_radio.setChecked(True)
 
-    # Rendering API
-    label6 = self.labelFactory.createLabel("sub_title", "Select the rendering API")
+    arch_icon_draw = QLabel(self)
+    arch_icon = QPixmap("./images/step_icons/arch_icon.png")
+    arch_icon_draw.setPixmap(arch_icon)
+    arch_icon_draw.setGeometry(56, 362, arch_icon_draw.width(), arch_icon_draw.height())
+
+    # Rendering API step
+    label_api_step = self.labelFactory.createLabel("sub_title", SUBTITLE_OVERPASS_FONT_400, "Select games rendering API")
     self.vulkan_radio = QRadioButton("Vulkan")
     self.d3d9_radio = QRadioButton("DirectX 9")
     self.d3d10_radio = QRadioButton("DirectX 10")
     self.vulkan_radio.setChecked(True)
 
+    api_icon_draw = QLabel(self)
+    api_icon = QPixmap("./images/step_icons/api_icon.png")
+    api_icon_draw.setPixmap(api_icon)
+    api_icon_draw.setGeometry(56, 493, api_icon_draw.width(), api_icon_draw.height())
+
     # Install
-    self.install_button = QPushButton("Install")
+    self.install_button = QPushButton("Install Reshade")
 
     # Status: means what's going on under the hood
-    self.status_label = self.labelFactory.createLabel("body", "Installed!")
+    self.status_label = self.labelFactory.createLabel("body", GLOBAL_OVERPASS_FONT, "Installed!")
     self.status_label.setAlignment(Qt.AlignCenter)
-    self.status_label.setContentsMargins(0, 10, 0, 10)
+    self.status_label.setContentsMargins(0, 40, 0, 5)
 
     # Draw stuff
-    main_layout.addWidget(label1)
-    main_layout.addWidget(label2)
-    main_layout.addWidget(label3)
+    main_layout.addWidget(label_title)
+    main_layout.addWidget(label_title_bottom)
+    main_layout.addWidget(label_description)
+    main_layout.addWidget(label_directory_step)
 
     main_layout.addWidget(browse_container)
     browse_layout.addWidget(self.line_edit)
     browse_layout.addWidget(self.browse_button)
 
-    main_layout.addWidget(label4)
-    main_layout.addWidget(label5)
+    main_layout.addWidget(label_arch_step)
     main_layout.addWidget(architecture_container)
     architecture_layout.addWidget(self.bit_32_radio)
     architecture_layout.addWidget(self.bit_64_radio)
 
-    main_layout.addWidget(label6)
+    main_layout.addWidget(label_api_step)
     main_layout.addWidget(rendering_container)
     
     for rendering in (self.vulkan_radio, self.d3d9_radio, self.d3d10_radio):
@@ -161,12 +199,6 @@ class MainWindow(QMainWindow):
 
       api = None
 
-      # For some reason python does not know how to follow with a match here...
-      # match api:
-      #   case self.vulkan_radio.isChecked(): api = "Vulkan"
-      #   case self.d3d9_radio.isChecked(): api = "d3d9"
-      #   case self.d3d10_radio.isChecked(): api = "d3d10"
-
       if self.vulkan_radio.isChecked():
         api = "Vulkan"
       elif self.d3d9_radio.isChecked():
@@ -194,6 +226,10 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
   app = QApplication(sys.argv)
+  
+  with open("style.css", "r") as file:
+    app.setStyleSheet(file.read())
+
   window = MainWindow()
   window.show()
   sys.exit(app.exec())
