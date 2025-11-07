@@ -15,7 +15,7 @@ _Why n-..._ I never built any GUI with **Qt** or **GTK**, so as I use *GNOME* on
 ## Usage
 *This will only be necessary until I have any packages, appImage or Flatpak.*
 
- 1. Download Reshade from the official website: https://reshade.me/
+ 1. Download Reshade from the official website: https://reshade.me/ <br>
 I did this because I saw this next to the download button: **Do NOT share the binaries or shader files. Link users to this website instead.**
 
  2. As this project was made in python with Qt, you will need to run `pip install PySide6` to install the lib for Qt **globally**, or you can do it on a **venv** if you want, so inside of the project folder:
