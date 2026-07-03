@@ -257,7 +257,7 @@ class PageClone(QWidget):
                 selections.append(checkbox.text())
 
     def start_clone(self, game_dir: str) -> None:
-        if not self.selections:
+        if not self.selections and self.renodx_addon.currentText() == "None":
             return
 
         self.clone_thread: QThread = QThread()

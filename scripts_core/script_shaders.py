@@ -118,6 +118,13 @@ class ShadersWorker(QObject):
             self.total_repos = len(self.selected_repos)
             current_repo: int = 0
 
+            # Download RenoDX addon asset if selected (must run even when no shader repos are selected)
+            renodx_url: str = f"https://github.com/clshortfuse/renodx/releases/download/snapshot/{self.selected_renodx_asset}"
+            renodx_asset_dir: str = os.path.join(
+                self.game_path, renodx_url.split("/")[-1].strip()
+            )
+            await self.download_renodx_asset(renodx_url, renodx_asset_dir)
+
             for repo_key in self.selected_repos:
                 repo_data: dict[str, str] | None = REPO_SHADERS.get(repo_key)
 
@@ -135,16 +142,7 @@ class ShadersWorker(QObject):
                     self.shader_temp_directory, f"{repo_name}.zip"
                 )
 
-                # RenoDX
-                renodx_url: str = f"https://github.com/clshortfuse/renodx/releases/download/snapshot/{self.selected_renodx_asset}"
-                renodx_asset_dir: str = os.path.join(
-                    self.game_path, renodx_url.split("/")[-1].strip()
-                )
-
-                await asyncio.gather(
-                    self.download_shaders(shader_url, zipped_shader_dir),
-                    self.download_renodx_asset(renodx_url, renodx_asset_dir),
-                )
+                await self.download_shaders(shader_url, zipped_shader_dir)
 
                 await self.unzip_shader(
                     self.shader_temp_directory, repo_name, zipped_shader_dir
